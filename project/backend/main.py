@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Task Manager API",
     description="""
-## Task Manager
+## Трёхзвенная архитектура — Task Manager
 
 Система управления задачами с ролевой моделью доступа.
 
@@ -23,7 +23,7 @@ app = FastAPI(
 - **viewer** — просмотр задач, обновление статуса только своих назначенных задач
 
 ### Аутентификация:
-Используется JWT Bearer токен. Получать через `/api/auth/login`, добавить в `Authorization: Bearer <token>`.
+Используется JWT Bearer токен. Получите токен через `/api/auth/login`, затем используйте его в заголовке `Authorization: Bearer <token>`.
     """,
     version="1.0.0",
     docs_url="/api/docs",
@@ -79,10 +79,10 @@ def get_me(current_user: models.User = Depends(auth.get_current_user)):
 # ── USERS (admin only) ────────────────────────────────────────────────────────
 
 @app.get("/api/users", response_model=List[schemas.UserOut], tags=["Users"],
-         summary="[admin] Список всех пользователей")
+         summary="[admin, moderator] Список всех пользователей")
 def list_users(
     db: Session = Depends(get_db),
-    _: models.User = Depends(auth.require_role(models.RoleEnum.admin))
+    _: models.User = Depends(auth.require_role(models.RoleEnum.admin, models.RoleEnum.moderator))
 ):
     return db.query(models.User).all()
 
@@ -92,7 +92,7 @@ def list_users(
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    _: models.User = Depends(auth.require_role(models.RoleEnum.admin))
+    _: models.User = Depends(auth.require_role(models.RoleEnum.admin, models.RoleEnum.moderator))
 ):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
@@ -223,7 +223,7 @@ def update_task(
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
-    _: models.User = Depends(auth.require_role(models.RoleEnum.admin))
+    _: models.User = Depends(auth.require_role(models.RoleEnum.admin, models.RoleEnum.moderator))
 ):
     task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not task:

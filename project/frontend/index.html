@@ -426,6 +426,26 @@
   </div>
 </div>
 
+<!-- MODAL: Quick Status -->
+<div class="modal-overlay hidden" id="status-modal">
+  <div class="modal">
+    <h2>Обновить статус</h2>
+    <input type="hidden" id="status-task-id">
+    <div class="form-group">
+      <label>Новый статус</label>
+      <select id="status-select">
+        <option value="todo">Todo</option>
+        <option value="in_progress">В работе</option>
+        <option value="done">Готово</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('status-modal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveQuickStatus()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = '/api';
 let token = localStorage.getItem('tf_token') || '';
@@ -624,7 +644,7 @@ async function openTaskModal(taskId = null) {
 
   // Load users for assignee
   try {
-    if (me.role === 'admin') {
+    if (me.role !== 'viewer') {
       const users = await apiFetch('/users');
       allUsers = users;
     }
@@ -690,14 +710,19 @@ async function deleteTask(id) {
   } catch (e) { toast(e.message, 'error'); }
 }
 
-async function quickStatus(taskId) {
-  const statuses = ['todo', 'in_progress', 'done'];
+function quickStatus(taskId) {
+  document.getElementById('status-task-id').value = taskId;
+  openModal('status-modal');
+}
+
+async function saveQuickStatus() {
+  const taskId = document.getElementById('status-task-id').value;
+  const newStatus = document.getElementById('status-select').value;
   const labels = { todo: 'Todo', in_progress: 'В работе', done: 'Готово' };
-  const newStatus = prompt(`Новый статус (${statuses.join(' / ')}):`, 'in_progress');
-  if (!statuses.includes(newStatus)) return toast('Неверный статус', 'error');
   try {
     await apiFetch(`/tasks/${taskId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
     toast(`Статус обновлён: ${labels[newStatus]}`);
+    closeModal('status-modal');
     loadTasks();
   } catch (e) { toast(e.message, 'error'); }
 }
@@ -718,8 +743,8 @@ async function loadUsers() {
         <td>${roleChip(u.role)}</td>
         <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
         <td>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openRoleModal(${u.id},'${u.username}','${u.role}')">Роль</button>
-          ${u.id !== me.id ? `<button class="btn btn-danger" style="font-size:11px;padding:5px 10px;margin-left:6px" onclick="deleteUser(${u.id})">✕</button>` : ''}
+          ${me.role === 'admin' ? `<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openRoleModal(${u.id},'${u.username}','${u.role}')">Роль</button>` : ''}
+          ${me.role === 'admin' && u.id !== me.id ? `<button class="btn btn-danger" style="font-size:11px;padding:5px 10px;margin-left:6px" onclick="deleteUser(${u.id})">✕</button>` : ''}
         </td>
       </tr>`).join('');
   } catch (e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red)">${e.message}</td></tr>`; }
