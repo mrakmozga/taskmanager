@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Task Manager API",
     description="""
-## Трёхзвенная архитектура — Task Manager
+## Task Manager
 
 Система управления задачами с ролевой моделью доступа.
 
