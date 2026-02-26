@@ -23,7 +23,7 @@ app = FastAPI(
 - **viewer** — просмотр задач, обновление статуса только своих назначенных задач
 
 ### Аутентификация:
-Используется JWT Bearer токен. Получите токен через `/api/auth/login`, затем используйте его в заголовке `Authorization: Bearer <token>`.
+Используется JWT Bearer токен. Получать через `/api/auth/login`, добавить в `Authorization: Bearer <token>`.
     """,
     version="1.0.0",
     docs_url="/api/docs",
